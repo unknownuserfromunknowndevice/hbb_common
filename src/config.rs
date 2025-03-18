@@ -2254,7 +2254,7 @@ fn is_some_hard_opton(name: &str) -> bool {
         .read()
         .unwrap()
         .get(name)
-        .map_or(true, |x| x == ("Y"))
+        .map_or(false, |x| x == ("Y"))
 }
 
 #[inline]
