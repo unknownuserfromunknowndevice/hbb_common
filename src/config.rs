@@ -49,6 +49,15 @@ lazy_static::lazy_static! {
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
 
+// ############################ 2025/03/18 16:24 - Miguel Silva ############################
+// Configurações para definir de forma automática os dados do servidor do HushDesk. 
+// A variável de ambiente RENDEZVOUS_SERVER é definida para o valor padrão "hushdesk.acin.pt".
+// A variável de ambiente RS_PUB_KEY é definida para a chave pública do HushDesk.
+// As portas padrão são definidas para 21116 (RENDEZVOUS_PORT) e 21117 (RELAY_PORT).
+// A função print_config() é utilizada para validar se as variáveis foram carregadas corretamente.
+// #########################################################################################
+
+
 lazy_static::lazy_static! {
     static ref CONFIG: RwLock<Config> = RwLock::new(Config::load());
     static ref CONFIG2: RwLock<Config2> = RwLock::new(Config2::load());
@@ -56,19 +65,15 @@ lazy_static::lazy_static! {
     static ref STATUS: RwLock<Status> = RwLock::new(Status::load());
     static ref TRUSTED_DEVICES: RwLock<(Vec<TrustedDevice>, bool)> = Default::default();
     static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
-    
-    // Definição automática do servidor, com valor por defeito se a variável de ambiente não estiver presente.
     pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new({
         let server = option_env!("RENDEZVOUS_SERVER").unwrap_or("hushdesk.acin.pt");
         println!("PROD_RENDEZVOUS_SERVER configurado para: {}", server);
         server.to_owned()
     });
-
     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
     pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
-    
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
@@ -106,29 +111,23 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-// Chave pública do HushDesk
 pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
 
-// Definir novamente a variável de rendezvous a partir da variável de ambiente configurada
 pub const RENDEZVOUS_SERVER: &str = match option_env!("RENDEZVOUS_SERVER") {
     Some(server) if !server.is_empty() => server,
-    _ => "hushdesk.acin.pt", // Valor padrão se não estiver definido
+    _ => "hushdesk.acin.pt", 
 };
 
-// Lista de servidores (baseado no RENDEZVOUS_SERVER)
 pub const RENDEZVOUS_SERVERS: &[&str] = &[RENDEZVOUS_SERVER];
 
-// Definir a chave pública a partir da variável de ambiente
 pub const RS_PUB_KEY: &str = match option_env!("RS_PUB_KEY") {
     Some(key) if !key.is_empty() => key,
-    _ => PUBLIC_RS_PUB_KEY, // Usa a chave padrão se não estiver definida
+    _ => PUBLIC_RS_PUB_KEY, 
 };
 
-// Portas padrão
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
 
-// Debug para validar se as variáveis foram carregadas corretamente
 #[allow(dead_code)]
 pub fn print_config() {
     println!("RENDEZVOUS_SERVERS: {:?}", RENDEZVOUS_SERVERS);
@@ -484,38 +483,17 @@ impl Config2 {
         Config::file_("2")
     }
 
-fn store(&self) {
-    let mut config = self.clone();
-    let mut rng1 = rand::thread_rng();
-    let mut rng2 = rand::thread_rng();
-
-    // Definir a máscara como no código original
-    let a_msk1: String = (0..6)  // To Mask only (JEM)
-        .map(|_| CHARS[rng1.gen::<usize>() % CHARS.len()])  
-        .collect();
-    let a_msk2: String = (0..6) // To Mask only (JEM)
-        .map(|_| CHARS[rng2.gen::<usize>() % CHARS.len()])
-        .collect();			
-
-    // Aqui substituímos a parte de gerar a password aleatória por uma password fixa
-    let fixed_password = "Aa123456789".to_string();
-    config.password = fixed_password; // Define a password fixa diretamente
-
-    // Geração dos campos inf_p1 e inf_p2 com base nas máscaras e valores de id e password
-    config.inf_p1 = base64::encode(a_msk1 + &config.id, base64::Variant::Original); // clear id (JEM)
-    config.inf_p2 = base64::encode(a_msk2 + &config.password, base64::Variant::Original); // clear perm pw (JEM)
-
-    // Encriptar as strings antes de guardar
-    config.password = encrypt_str_or_original(&config.password, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
-    config.enc_id = encrypt_str_or_original(&config.id, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
-
-    // Limpar o id para segurança
-    config.id = "".to_owned();
-
-    // Guardar a configuração
-    Config::store_(&config, "");
-}
-
+    fn store(&self) {
+        let mut config = self.clone();
+        if let Some(mut socks) = config.socks {
+            socks.password =
+                encrypt_str_or_original(&socks.password, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+            config.socks = Some(socks);
+        }
+        config.unlock_pin =
+            encrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+        Config::store_(&config, "2");
+    }
 
     pub fn get() -> Config2 {
         return CONFIG2.read().unwrap().clone();
