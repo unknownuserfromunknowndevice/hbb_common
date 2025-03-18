@@ -106,36 +106,35 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["hushdesk.acin.pt"];
+// Chave pública padrão
 pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
 
-pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
-
-// Obtém o servidor de ambiente ou usa o valor por defeito
+// Definir o servidor de rendezvous a partir da variável de ambiente
 pub const RENDEZVOUS_SERVER: &str = match option_env!("RENDEZVOUS_SERVER") {
     Some(server) if !server.is_empty() => server,
-    _ => "hushdesk.acin.pt",
+    _ => "hushdesk.acin.pt", // Valor padrão
 };
 
-// Define os servidores como array, usando o valor obtido
+// Lista de servidores (baseado no RENDEZVOUS_SERVER)
 pub const RENDEZVOUS_SERVERS: &[&str] = &[RENDEZVOUS_SERVER];
 
-// Obtém a chave pública do ambiente ou usa a chave pública por defeito
+// Definir a chave pública a partir da variável de ambiente
 pub const RS_PUB_KEY: &str = match option_env!("RS_PUB_KEY") {
     Some(key) if !key.is_empty() => key,
-    _ => PUBLIC_RS_PUB_KEY,
+    _ => PUBLIC_RS_PUB_KEY, // Usa a chave padrão se não estiver definida
 };
 
 // Portas padrão
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
 
-// Debug para validar valores (podes remover depois de testar)
+// Debug para validar se as variáveis foram carregadas corretamente
 #[allow(dead_code)]
 pub fn print_config() {
     println!("RENDEZVOUS_SERVERS: {:?}", RENDEZVOUS_SERVERS);
     println!("RS_PUB_KEY: {}", RS_PUB_KEY);
 }
+
 
 
 macro_rules! serde_field_string {
