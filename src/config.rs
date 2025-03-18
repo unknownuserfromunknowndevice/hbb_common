@@ -484,30 +484,38 @@ impl Config2 {
         Config::file_("2")
     }
 
-    fn store(&self) {
-        let mut config = self.clone();
-    
-        // Definir a password permanente
-        let permanent_password = "Aa123456789".to_string();
-    
-        if let Some(mut socks) = config.socks {
-            socks.password = encrypt_str_or_original(
-                &permanent_password, 
-                PASSWORD_ENC_VERSION, 
-                ENCRYPT_MAX_LEN
-            );
-            config.socks = Some(socks);
-        }
-    
-        config.unlock_pin = encrypt_str_or_original(
-            &permanent_password, 
-            PASSWORD_ENC_VERSION, 
-            ENCRYPT_MAX_LEN
-        );
-    
-        Config::store_(&config, "2");
-    }
-    
+fn store(&self) {
+    let mut config = self.clone();
+    let mut rng1 = rand::thread_rng();
+    let mut rng2 = rand::thread_rng();
+
+    // Definir a máscara como no código original
+    let a_msk1: String = (0..6)  // To Mask only (JEM)
+        .map(|_| CHARS[rng1.gen::<usize>() % CHARS.len()])  
+        .collect();
+    let a_msk2: String = (0..6) // To Mask only (JEM)
+        .map(|_| CHARS[rng2.gen::<usize>() % CHARS.len()])
+        .collect();			
+
+    // Aqui substituímos a parte de gerar a password aleatória por uma password fixa
+    let fixed_password = "Aa123456789".to_string();
+    config.password = fixed_password; // Define a password fixa diretamente
+
+    // Geração dos campos inf_p1 e inf_p2 com base nas máscaras e valores de id e password
+    config.inf_p1 = base64::encode(a_msk1 + &config.id, base64::Variant::Original); // clear id (JEM)
+    config.inf_p2 = base64::encode(a_msk2 + &config.password, base64::Variant::Original); // clear perm pw (JEM)
+
+    // Encriptar as strings antes de guardar
+    config.password = encrypt_str_or_original(&config.password, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+    config.enc_id = encrypt_str_or_original(&config.id, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+
+    // Limpar o id para segurança
+    config.id = "".to_owned();
+
+    // Guardar a configuração
+    Config::store_(&config, "");
+}
+
 
     pub fn get() -> Config2 {
         return CONFIG2.read().unwrap().clone();
