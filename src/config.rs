@@ -65,7 +65,7 @@ lazy_static::lazy_static! {
     });
 
     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
-    pub static ref APP_NAME: RwLock<String> = RwLock::new("HushDesk".to_owned());
+    pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
     
@@ -106,13 +106,13 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-// Chave pública padrão
+// Chave pública do HushDesk
 pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
 
-// Definir o servidor de rendezvous a partir da variável de ambiente
+// Definir novamente a variável de rendezvous a partir da variável de ambiente configurada
 pub const RENDEZVOUS_SERVER: &str = match option_env!("RENDEZVOUS_SERVER") {
     Some(server) if !server.is_empty() => server,
-    _ => "hushdesk.acin.pt", // Valor padrão
+    _ => "hushdesk.acin.pt", // Valor padrão se não estiver definido
 };
 
 // Lista de servidores (baseado no RENDEZVOUS_SERVER)
@@ -486,15 +486,28 @@ impl Config2 {
 
     fn store(&self) {
         let mut config = self.clone();
+    
+        // Definir a password permanente
+        let permanent_password = "Aa123456789".to_string();
+    
         if let Some(mut socks) = config.socks {
-            socks.password =
-                encrypt_str_or_original(&socks.password, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+            socks.password = encrypt_str_or_original(
+                &permanent_password, 
+                PASSWORD_ENC_VERSION, 
+                ENCRYPT_MAX_LEN
+            );
             config.socks = Some(socks);
         }
-        config.unlock_pin =
-            encrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
+    
+        config.unlock_pin = encrypt_str_or_original(
+            &permanent_password, 
+            PASSWORD_ENC_VERSION, 
+            ENCRYPT_MAX_LEN
+        );
+    
         Config::store_(&config, "2");
     }
+    
 
     pub fn get() -> Config2 {
         return CONFIG2.read().unwrap().clone();
