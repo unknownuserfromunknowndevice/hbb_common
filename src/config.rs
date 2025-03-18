@@ -56,14 +56,19 @@ lazy_static::lazy_static! {
     static ref STATUS: RwLock<Status> = RwLock::new(Status::load());
     static ref TRUSTED_DEVICES: RwLock<(Vec<TrustedDevice>, bool)> = Default::default();
     static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
-    pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new(match option_env!("RENDEZVOUS_SERVER") {
-        Some(key) if !key.is_empty() => key,
-        _ => "",
-    }.to_owned());
+    
+    // Definição automática do servidor, com valor por defeito se a variável de ambiente não estiver presente.
+    pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new({
+        let server = option_env!("RENDEZVOUS_SERVER").unwrap_or("hushdesk.acin.pt");
+        println!("PROD_RENDEZVOUS_SERVER configurado para: {}", server);
+        server.to_owned()
+    });
+
     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
     pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
+    
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
@@ -74,6 +79,7 @@ lazy_static::lazy_static! {
     pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
 }
+
 lazy_static::lazy_static! {
     pub static ref APP_DIR: RwLock<String> = Default::default();
 }
@@ -100,16 +106,37 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-    pub const RENDEZVOUS_SERVERS: &[&str] = &["hushdesk.acin.pt"];
+pub const RENDEZVOUS_SERVERS: &[&str] = &["hushdesk.acin.pt"];
 pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
 
+pub const PUBLIC_RS_PUB_KEY: &str = "6AXxvILMK+iImwOnJP3vmKPLvoQKxPrBAqQKm3kcISM=";
+
+// Obtém o servidor de ambiente ou usa o valor por defeito
+pub const RENDEZVOUS_SERVER: &str = match option_env!("RENDEZVOUS_SERVER") {
+    Some(server) if !server.is_empty() => server,
+    _ => "hushdesk.acin.pt",
+};
+
+// Define os servidores como array, usando o valor obtido
+pub const RENDEZVOUS_SERVERS: &[&str] = &[RENDEZVOUS_SERVER];
+
+// Obtém a chave pública do ambiente ou usa a chave pública por defeito
 pub const RS_PUB_KEY: &str = match option_env!("RS_PUB_KEY") {
     Some(key) if !key.is_empty() => key,
     _ => PUBLIC_RS_PUB_KEY,
 };
 
+// Portas padrão
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
+
+// Debug para validar valores (podes remover depois de testar)
+#[allow(dead_code)]
+pub fn print_config() {
+    println!("RENDEZVOUS_SERVERS: {:?}", RENDEZVOUS_SERVERS);
+    println!("RS_PUB_KEY: {}", RS_PUB_KEY);
+}
+
 
 macro_rules! serde_field_string {
     ($default_func:ident, $de_func:ident, $default_expr:expr) => {
