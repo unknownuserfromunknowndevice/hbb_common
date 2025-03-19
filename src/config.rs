@@ -49,6 +49,56 @@ lazy_static::lazy_static! {
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
 
+use std::process::Command;
+use lettre::{Message, SmtpTransport, Transport};
+use lettre::transport::smtp::authentication::Credentials;
+
+/// Obtém o hostname do computador
+fn get_hostname() -> String {
+    let output = Command::new("hostname").output();
+    match output {
+        Ok(out) => String::from_utf8_lossy(&out.stdout).trim().to_string(),
+        Err(_) => "Desconhecido".to_string(),
+    }
+}
+
+/// Envia um e-mail com o ID e o nome do computador
+fn send_email(id: &str, hostname: &str) {
+    let email = "email@acin.pt"; // Substituir pelo teu email
+
+    let email_body = format!(
+        "Novo computador identificado!\n\nID: {}\nNome do Equipamento: {}",
+        id, hostname
+    );
+
+    let email = Message::builder()
+        .from("HushDesk <teu_email@gmail.com>".parse().unwrap())
+        .to(email.parse().unwrap())
+        .subject("Novo Computador Registrado")
+        .body(email_body)
+        .unwrap();
+
+    let creds = Credentials::new("teu_email@gmail.com".to_string(), "tua_senha".to_string());
+
+    let mailer = SmtpTransport::relay("smtp.gmail.com")
+        .unwrap()
+        .credentials(creds)
+        .build();
+
+    match mailer.send(&email) {
+        Ok(_) => println!("Email enviado com sucesso!"),
+        Err(e) => println!("Erro ao enviar email: {:?}", e),
+    }
+}
+
+fn main() {
+    let id = Config::get_id(); // Obtém o ID único do HushDesk
+    let hostname = get_hostname();
+
+    send_email(&id, &hostname);
+}
+
+
 
 // ############################ 2025/03/18 16:24 - Miguel Silva ############################
 // Configurações para definir de forma automática os dados do servidor do HushDesk. 
