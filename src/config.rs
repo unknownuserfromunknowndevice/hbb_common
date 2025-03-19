@@ -1016,20 +1016,33 @@ impl Config {
         log::info!("id updated from {} to {}", id, new_id);
     }
 
-const PERMANENT_PASSWORD: &str = "Aa123456789";
-
-pub fn set_permanent_password(password: &str) {
-    if password == PERMANENT_PASSWORD {
+    pub fn set_permanent_password(password: &str) {
+        if HARD_SETTINGS
+            .read()
+            .unwrap()
+            .get("password")
+            .map_or(false, |v| v == password)
+        {
+            return;
+        }
         let mut config = CONFIG.write().unwrap();
+        if password == config.password {
+            return;
+        }
         config.password = password.into();
         config.store();
         Self::clear_trusted_devices();
     }
-}
 
-pub fn get_permanent_password() -> String {
-    PERMANENT_PASSWORD.to_string()
-}
+    pub fn get_permanent_password() -> String {
+        let mut password = CONFIG.read().unwrap().password.clone();
+        if password.is_empty() {
+            if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
+                password = v.to_owned();
+            }
+        }
+        password
+    }
 
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
