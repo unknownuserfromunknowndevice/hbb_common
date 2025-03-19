@@ -49,6 +49,7 @@ lazy_static::lazy_static! {
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
 
+
 // ############################ 2025/03/18 16:24 - Miguel Silva ############################
 // Configurações para definir de forma automática os dados do servidor do HushDesk. 
 // A variável de ambiente RENDEZVOUS_SERVER é definida para o valor padrão "hushdesk.acin.pt".
@@ -2230,13 +2231,22 @@ fn is_option_can_save(
     true
 }
 
+// ############################ 2025/03/19 11:29 - Miguel Silva  ############################
+// A opção is_incoming_only serve para verificar se a conexão é apenas de entrada.
+// Se estiver marcada como true, a conexão é apenas de entrada.
+// Se estiver marcada como false, a conexão é de entrada e saída.
+// A opção is_outgoing_only serve para verificar se a conexão é apenas de saída
+// Se estiver marcada como true, a conexão é apenas de saída.
+// Se estiver marcada como false, a conexão é de entrada e saída.
+// #########################################################################################
+
 #[inline]
 pub fn is_incoming_only() -> bool {
     HARD_SETTINGS
         .read()
         .unwrap()
         .get("conn-type")
-        .map_or(true, |x| x == ("incoming"))
+        .map_or(false, |x| x == ("incoming"))
 }
 
 #[inline]
