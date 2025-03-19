@@ -56,8 +56,6 @@ type KeyPair = (Vec<u8>, Vec<u8>);
 // A variável de ambiente RS_PUB_KEY é definida para a chave pública do HushDesk.
 // As portas padrão são definidas para 21116 (RENDEZVOUS_PORT) e 21117 (RELAY_PORT).
 // A função print_config() é utilizada para validar se as variáveis foram carregadas corretamente.
-// #########################################################################################
-
 
 lazy_static::lazy_static! {
     static ref CONFIG: RwLock<Config> = RwLock::new(Config::load());
@@ -135,7 +133,7 @@ pub fn print_config() {
     println!("RS_PUB_KEY: {}", RS_PUB_KEY);
 }
 
-
+// #########################################################################################
 
 macro_rules! serde_field_string {
     ($default_func:ident, $de_func:ident, $default_expr:expr) => {
@@ -2238,7 +2236,7 @@ fn is_option_can_save(
 // A opção is_outgoing_only serve para verificar se a conexão é apenas de saída
 // Se estiver marcada como true, a conexão é apenas de saída.
 // Se estiver marcada como false, a conexão é de entrada e saída.
-// #########################################################################################
+
 
 #[inline]
 pub fn is_incoming_only() -> bool {
@@ -2266,6 +2264,8 @@ fn is_some_hard_opton(name: &str) -> bool {
         .get(name)
         .map_or(false, |x| x == ("Y"))
 }
+
+// #########################################################################################
 
 #[inline]
 pub fn is_disable_tcp_listen() -> bool {
