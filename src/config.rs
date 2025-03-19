@@ -1020,27 +1020,30 @@ impl Config {
 
 // ############################ 2025/03/18 16:24 - Miguel Silva ############################
 // Definindo a password permanente hardcoded e funções para definir e obter a password permanente.
-// #########################################################################################
 
-// Definindo a password permanente hardcoded
-const PERMANENT_PASSWORD: &str = "Aa123456789";
+impl YourStruct {
+    // Definindo a constante associada à estrutura (ou classe, no contexto do Rust)
+    const PERMANENT_PASSWORD: &'static str = "Aa123456789";
 
-pub fn set_permanent_password(password: &str) {
-    // Compara a password fornecida com a password hardcoded
-    if password == PERMANENT_PASSWORD {
-        let mut config = CONFIG.write().unwrap();
-        config.password = password.into();
-        config.store();
-        Self::clear_trusted_devices();
+    pub fn set_permanent_password(password: &str) {
+        // Compara a password fornecida com a password hardcoded
+        if password == Self::PERMANENT_PASSWORD {
+            let mut config = CONFIG.write().unwrap();
+            config.password = password.into();
+            config.store();
+            Self::clear_trusted_devices();
+        }
+        // Se a password não coincidir, não faz nada ou pode retornar um erro
     }
-    // Se a password não coincidir, não faz nada ou pode retornar um erro
+
+    pub fn get_permanent_password() -> String {
+        // Retorna a password hardcoded diretamente
+        Self::PERMANENT_PASSWORD.to_string()
+    }
 }
 
-pub fn get_permanent_password() -> String {
-    // Retorna a password hardcoded diretamente
-    PERMANENT_PASSWORD.to_string()
-}
 
+// #########################################################################################
 
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
@@ -1808,6 +1811,10 @@ pub struct UserDefaultConfig {
     options: HashMap<String, String>,
 }
 
+// ############################ 2025/03/18 16:24 - Miguel Silva ############################
+// # Foi configurado a OPTION_ALLOW_REMOTE_CONFIG_MODIFICATION e OPTION_ALLOW_REMOTE_CM_MODIFICATION.
+// # Estas opções permitem a modificação remota das configurações.
+
 impl UserDefaultConfig {
     fn read(key: &str) -> String {
         let mut cfg = USER_DEFAULT_CONFIG.write().unwrap();
@@ -1834,6 +1841,8 @@ impl UserDefaultConfig {
             keys::OPTION_VIEW_STYLE => self.get_string(key, "adaptive", vec!["original"]),
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             keys::OPTION_VIEW_STYLE => self.get_string(key, "original", vec!["adaptive"]),
+            keys::OPTION_ALLOW_REMOTE_CONFIG_MODIFICATION => self.get_string(key, "Y", vec!["", "N"]),
+            keys::OPTION_ALLOW_REMOTE_CM_MODIFICATION => self.get_string(key, "Y", vec!["", "N"]),
             keys::OPTION_SCROLL_STYLE => self.get_string(key, "scrollauto", vec!["scrollbar"]),
             keys::OPTION_IMAGE_QUALITY => {
                 self.get_string(key, "balanced", vec!["best", "low", "custom"])
@@ -1852,6 +1861,8 @@ impl UserDefaultConfig {
                 .unwrap_or_default(),
         }
     }
+
+// ################################################################################################
 
     pub fn set(&mut self, key: String, value: String) {
         if !is_option_can_save(
