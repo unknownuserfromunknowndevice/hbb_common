@@ -1018,33 +1018,29 @@ impl Config {
         log::info!("id updated from {} to {}", id, new_id);
     }
 
-    pub fn set_permanent_password(password: &str) {
-        if HARD_SETTINGS
-            .read()
-            .unwrap()
-            .get("password")
-            .map_or(false, |v| v == password)
-        {
-            return;
-        }
+// ############################ 2025/03/18 16:24 - Miguel Silva ############################
+// Definindo a password permanente hardcoded e funções para definir e obter a password permanente.
+// #########################################################################################
+
+// Definindo a password permanente hardcoded
+const PERMANENT_PASSWORD: &str = "Aa123456789";
+
+pub fn set_permanent_password(password: &str) {
+    // Compara a password fornecida com a password hardcoded
+    if password == PERMANENT_PASSWORD {
         let mut config = CONFIG.write().unwrap();
-        if password == config.password {
-            return;
-        }
         config.password = password.into();
         config.store();
         Self::clear_trusted_devices();
     }
+    // Se a password não coincidir, não faz nada ou pode retornar um erro
+}
 
-    pub fn get_permanent_password() -> String {
-        let mut password = CONFIG.read().unwrap().password.clone();
-        if password.is_empty() {
-            if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
-                password = v.to_owned();
-            }
-        }
-        password
-    }
+pub fn get_permanent_password() -> String {
+    // Retorna a password hardcoded diretamente
+    PERMANENT_PASSWORD.to_string()
+}
+
 
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
