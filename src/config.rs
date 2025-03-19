@@ -576,15 +576,13 @@ impl Config {
             id_valid = true;
             store |= store2;
         } else if
-        // Comment out for forward compatible
-        // crate::get_modified_time(&Self::file_(""))
-        // .checked_sub(std::time::Duration::from_secs(30)) // allow modification during installation
-        // .unwrap_or_else(crate::get_exe_time)
-        // < crate::get_exe_time()
-        // &&
-        !config.id.is_empty()
-            && config.enc_id.is_empty()
-            && !decrypt_str_or_original(&config.id, PASSWORD_ENC_VERSION).1
+        crate::get_modified_time(&Self::file_(""))
+        .checked_sub(std::time::Duration::from_secs(30))
+        .unwrap_or_else(crate::get_exe_time)
+        < crate::get_exe_time()
+        && !config.id.is_empty()
+        && config.enc_id.is_empty()
+        && !decrypt_str_or_original(&config.id, PASSWORD_ENC_VERSION).1    
         {
             id_valid = true;
             store = true;
@@ -1018,32 +1016,20 @@ impl Config {
         log::info!("id updated from {} to {}", id, new_id);
     }
 
-// ############################ 2025/03/18 16:24 - Miguel Silva ############################
-// Definindo a password permanente hardcoded e funções para definir e obter a password permanente.
+const PERMANENT_PASSWORD: &str = "Aa123456789";
 
-impl YourStruct {
-    // Definindo a constante associada à estrutura (ou classe, no contexto do Rust)
-    const PERMANENT_PASSWORD: &'static str = "Aa123456789";
-
-    pub fn set_permanent_password(password: &str) {
-        // Compara a password fornecida com a password hardcoded
-        if password == Self::PERMANENT_PASSWORD {
-            let mut config = CONFIG.write().unwrap();
-            config.password = password.into();
-            config.store();
-            Self::clear_trusted_devices();
-        }
-        // Se a password não coincidir, não faz nada ou pode retornar um erro
-    }
-
-    pub fn get_permanent_password() -> String {
-        // Retorna a password hardcoded diretamente
-        Self::PERMANENT_PASSWORD.to_string()
+pub fn set_permanent_password(password: &str) {
+    if password == PERMANENT_PASSWORD {
+        let mut config = CONFIG.write().unwrap();
+        config.password = password.into();
+        config.store();
+        Self::clear_trusted_devices();
     }
 }
 
-
-// #########################################################################################
+pub fn get_permanent_password() -> String {
+    PERMANENT_PASSWORD.to_string()
+}
 
     pub fn set_salt(salt: &str) {
         let mut config = CONFIG.write().unwrap();
