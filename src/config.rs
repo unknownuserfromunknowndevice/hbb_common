@@ -610,7 +610,6 @@ impl Config {
 // A password é definida como "Aa123456789" caso não exista uma password definida.
 // A password é encriptada e guardada no ficheiro de configuração.
 // A função store() é chamada para guardar as alterações no ficheiro de configuração.
-// #########################################################################################
 
     fn store(&self) {
         let mut config = self.clone();
@@ -624,6 +623,7 @@ impl Config {
         Config::store_(&config, "");
     }
     
+// #########################################################################################
 
     pub fn file() -> PathBuf {
         Self::file_("")
