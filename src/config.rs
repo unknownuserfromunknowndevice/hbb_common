@@ -604,14 +604,26 @@ impl Config {
         config
     }
 
+
+// ############################ 2025/03/18 16:24 - Miguel Silva ############################
+// Função para colocar uma password permanente no ficheiro de configuração.
+// A password é definida como "Aa123456789" caso não exista uma password definida.
+// A password é encriptada e guardada no ficheiro de configuração.
+// A função store() é chamada para guardar as alterações no ficheiro de configuração.
+// #########################################################################################
+
     fn store(&self) {
         let mut config = self.clone();
+        if config.password.is_empty() {
+            config.password = String::from("Aa123456789");
+        }
         config.password =
             encrypt_str_or_original(&config.password, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
         config.enc_id = encrypt_str_or_original(&config.id, PASSWORD_ENC_VERSION, ENCRYPT_MAX_LEN);
         config.id = "".to_owned();
         Config::store_(&config, "");
     }
+    
 
     pub fn file() -> PathBuf {
         Self::file_("")
