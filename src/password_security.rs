@@ -32,7 +32,7 @@ pub fn temporary_password() -> String {
 
 fn verification_method() -> VerificationMethod {
     let method = Config::get_option("verification-method");
-    if method == "use-temporary-password" {
+    if method == "use-permanent-password" {
         VerificationMethod::OnlyUseTemporaryPassword
     } else if method == "use-permanent-password" {
         VerificationMethod::OnlyUsePermanentPassword
