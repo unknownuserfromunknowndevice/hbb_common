@@ -57,7 +57,7 @@ pub fn temporary_enabled() -> bool {
 }
 
 pub fn permanent_enabled() -> bool {
-    verification_method() != VerificationMethod::OnlyUseTemporaryPassword
+    verification_method() != VerificationMethod::OnlyUsePermanentPassword
 }
 
 pub fn has_valid_password() -> bool {
