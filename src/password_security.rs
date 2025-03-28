@@ -52,6 +52,7 @@ pub fn temporary_password_length() -> usize {
     }
 }
 
+
 pub fn temporary_enabled() -> bool {
     verification_method() != VerificationMethod::OnlyUsePermanentPassword
 }
